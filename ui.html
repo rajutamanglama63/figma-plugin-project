@@ -71,9 +71,49 @@ document.getElementById('cancel').onclick = () => {
         parent.postMessage({ pluginMessage: { type: "invoke-oauth" } }, "*");
       };
 
-      document.getElementById("cancel").onclick = () => {
-        parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+      // document.getElementById("cancel").onclick = () => {
+      //   parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+      // };
+
+      window.onmessage = async (event) => {
+        const msg = event.data.pluginMessage;
+
+        if (msg.type === "start-auth") {
+          // initiating the OAuth flow
+          const authUrl = "http://localhost:4000/oauth/start";
+          const writeKey = await fetchWriteKeyFromServer();
+          window.open(`${authUrl}?key=${writeKey}`, "_blank");
+        } else if (msg.type === "token") {
+          // if already authenticated, allow access to further proceed
+          console.log("Token: ", msg.token);
+        }
       };
+
+      async function fetchWriteKeyFromServer() {
+        // Fetch a write key from your server for the OAuth flow
+        const response = await fetch("http://localhost:4000/generate-key", {
+          method: "POST",
+        });
+        const data = await response.json();
+        return data.writeKey;
+      }
+
+      // Polling for the OAuth result
+      setInterval(async () => {
+        const readKey = await fetchReadKeyFromServer();
+        const response = await fetch(
+          `http://localhost:4000/poll?key=${readKey}`
+        );
+        const data = await response.json();
+
+        if (data.token) {
+          // Send the token back to the main plugin
+          parent.postMessage(
+            { pluginMessage: { type: "save-token", token: data.token } },
+            "*"
+          );
+        }
+      }, 3000);
     </script>
   </body>
 </html>

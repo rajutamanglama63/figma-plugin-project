@@ -34,12 +34,28 @@
 // };
 
 
-figma.showUI(__html__);
+figma.showUI(__html__, { width: 300, height: 400 });
 
-figma.ui.onmessage = (msg: { type: string }) => {
+// check if we've a token stored
+const checkAuthentication = async () => {
+  const token = await figma.clientStorage.getAsync("my-token");
+
+  if (token) {
+    figma.ui.postMessage({ type: "token", token })
+  } else {
+    // If no token, initiate OAuth flow
+    figma.ui.postMessage({ type: 'start-auth' });
+  }
+}
+
+checkAuthentication();
+
+figma.ui.onmessage = async (msg: { type: string, token: string }) => {
   if (msg.type === 'invoke-oauth') {
-    console.log("Hello developer!")
-  } else if (msg.type === 'cancel') {
+    // console.log("Hello developer!")
+    figma.ui.postMessage({ type: 'start-auth' });
+  } else if (msg.type === "save-token") {
+    await figma.clientStorage.setAsync("my-token", msg.token)
     figma.closePlugin();
   }
 };
