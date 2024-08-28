@@ -80,7 +80,7 @@ document.getElementById('cancel').onclick = () => {
 
         if (msg.type === "start-auth") {
           // initiating the OAuth flow
-          const authUrl = "http://localhost:4000/oauth/start";
+          const authUrl = "http://localhost:4000/api/oauth/start";
           const writeKey = await fetchWriteKeyFromServer();
           window.open(`${authUrl}?key=${writeKey}`, "_blank");
         } else if (msg.type === "token") {
@@ -91,7 +91,7 @@ document.getElementById('cancel').onclick = () => {
 
       async function fetchWriteKeyFromServer() {
         // Fetch a write key from your server for the OAuth flow
-        const response = await fetch("http://localhost:4000/generate-key", {
+        const response = await fetch("http://localhost:4000/api/generate-key", {
           method: "POST",
         });
         const data = await response.json();
@@ -100,9 +100,10 @@ document.getElementById('cancel').onclick = () => {
 
       // Polling for the OAuth result
       setInterval(async () => {
-        const readKey = await fetchReadKeyFromServer();
+        // const readKey = await fetchReadKeyFromServer();
+        const readKey = 123;
         const response = await fetch(
-          `http://localhost:4000/poll?key=${readKey}`
+          `http://localhost:4000/api/poll?key=${readKey}`
         );
         const data = await response.json();
 

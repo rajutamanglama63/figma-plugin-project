@@ -42,9 +42,11 @@ const checkAuthentication = async () => {
 
   if (token) {
     figma.ui.postMessage({ type: "token", token })
-  } else {
+  }
+  else {
     // If no token, initiate OAuth flow
-    figma.ui.postMessage({ type: 'start-auth' });
+    // figma.ui.postMessage({ type: 'start-auth' });
+    console.log("do nothing");
   }
 }
 
