@@ -61,12 +61,14 @@ document.getElementById('cancel').onclick = () => {
         <div class="unauth">
           <h3>You are logged out</h3>
           <p>login to start using comfeed</p>
-          <button class="btn">Login</button>
+          <button class="btn">Log in with Figma</button>
         </div>
       </section>
     </div>
 
     <script>
+      let readKey = null;
+
       document.querySelector(".btn").onclick = () => {
         parent.postMessage({ pluginMessage: { type: "invoke-oauth" } }, "*");
       };
@@ -81,7 +83,11 @@ document.getElementById('cancel').onclick = () => {
         if (msg.type === "start-auth") {
           // initiating the OAuth flow
           const authUrl = "http://localhost:4000/api/oauth/start";
-          const writeKey = await fetchWriteKeyFromServer();
+          // const writeKey = await fetchWriteKeyFromServer();
+          const { writeKey, readKey: newReadKey } = await fetchKeysFromServer();
+
+          // Store the read key
+          readKey = newReadKey;
           window.open(`${authUrl}?key=${writeKey}`, "_blank");
         } else if (msg.type === "token") {
           // if already authenticated, allow access to further proceed
@@ -89,19 +95,35 @@ document.getElementById('cancel').onclick = () => {
         }
       };
 
-      async function fetchWriteKeyFromServer() {
-        // Fetch a write key from your server for the OAuth flow
+      // async function fetchWriteKeyFromServer() {
+      //   // Fetch a write key from your server for the OAuth flow
+      //   const response = await fetch("http://localhost:4000/api/generate-key", {
+      //     method: "POST",
+      //   });
+      //   const data = await response.json();
+      //   return data.writeKey;
+      // }
+
+      async function fetchKeysFromServer() {
         const response = await fetch("http://localhost:4000/api/generate-key", {
           method: "POST",
         });
         const data = await response.json();
-        return data.writeKey;
+        return { writeKey: data.writeKey, readKey: data.readKey };
+      }
+
+      async function fetchReadKeyFromServer() {
+        if (readKey) {
+          return readKey;
+        }
+        const { readKey: newReadKey } = await fetchKeysFromServer();
+        readKey = newReadKey;
+        return readKey;
       }
 
       // Polling for the OAuth result
       setInterval(async () => {
-        // const readKey = await fetchReadKeyFromServer();
-        const readKey = 123;
+        const readKey = await fetchReadKeyFromServer();
         const response = await fetch(
           `http://localhost:4000/api/poll?key=${readKey}`
         );
