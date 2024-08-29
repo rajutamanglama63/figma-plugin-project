@@ -41,23 +41,49 @@ const checkAuthentication = async () => {
   const token = await figma.clientStorage.getAsync("my-token");
 
   if (token) {
-    figma.ui.postMessage({ type: "token", token })
+    figma.ui.postMessage({ type: "show-rectangle-ui", token })
   }
   else {
-    // If no token, initiate OAuth flow
-    // figma.ui.postMessage({ type: 'start-auth' });
     console.log("do nothing");
   }
 }
 
 checkAuthentication();
 
-figma.ui.onmessage = async (msg: { type: string, token: string }) => {
+figma.ui.onmessage = async (msg: { type: string, token?: string, count?: number }) => {
   if (msg.type === 'invoke-oauth') {
     // console.log("Hello developer!")
     figma.ui.postMessage({ type: 'start-auth' });
   } else if (msg.type === "save-token") {
     await figma.clientStorage.setAsync("my-token", msg.token)
+    showAuthenticatedUI()
+  } else if (msg.type === 'create-rectangles') {
+    const nodes: SceneNode[] = [];
+    for (let i = 0; i < msg.count!; i++) {
+      const rect = figma.createRectangle();
+      rect.x = i * 150;
+      const solidPaint: SolidPaint = {
+        type: 'SOLID',
+        color: { r: 1, g: 0.5, b: 0 },
+        opacity: 1, // default opacity
+        visible: true, // visibility is true by default
+        blendMode: 'NORMAL', // default blend mode
+        boundVariables: {},
+      };
+
+      rect.fills = [solidPaint];
+      // rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
+      figma.currentPage.appendChild(rect);
+      nodes.push(rect);
+    }
+    figma.currentPage.selection = nodes;
+    figma.viewport.scrollAndZoomIntoView(nodes);
+  } else if (msg.type === "cancel") {
     figma.closePlugin();
   }
 };
+
+// Function to show the authenticated UI
+function showAuthenticatedUI() {
+  figma.ui.postMessage({ type: 'show-rectangle-ui' });
+}

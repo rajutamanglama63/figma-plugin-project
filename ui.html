@@ -53,6 +53,18 @@ document.getElementById('cancel').onclick = () => {
       .btn:hover {
         opacity: 0.5;
       }
+      .authenticated_sec {
+        display: none;
+      }
+      .input_field {
+        padding: 8px;
+        border: 1px solid #8d8b8b;
+        border-radius: 5px;
+        width: 100%;
+      }
+      .input_field:focus {
+        outline: none;
+      }
     </style>
   </head>
   <body>
@@ -63,6 +75,12 @@ document.getElementById('cancel').onclick = () => {
           <p>login to start using comfeed</p>
           <button class="btn">Log in with Figma</button>
         </div>
+      </section>
+      <section class="authenticated_sec">
+        <h2>Rectangle Creator</h2>
+        <p>Count: <input class="input_field" id="count" value="5" /></p>
+        <button id="create" class="btn">Create</button>
+        <button id="cancel" class="btn">Cancel</button>
       </section>
     </div>
 
@@ -89,9 +107,11 @@ document.getElementById('cancel').onclick = () => {
           // Store the read key
           readKey = newReadKey;
           window.open(`${authUrl}?key=${writeKey}`, "_blank");
-        } else if (msg.type === "token") {
+        } else if (msg.type === "show-rectangle-ui") {
           // if already authenticated, allow access to further proceed
-          console.log("Token: ", msg.token);
+          // console.log("Token: ", msg.token);
+          document.querySelector(".authenticated_sec").style.display = "block";
+          document.querySelector(".sec").style.display = "none";
         }
       };
 
@@ -137,6 +157,20 @@ document.getElementById('cancel').onclick = () => {
           );
         }
       }, 3000);
+
+      // Event listeners for buttons
+      document.getElementById("create").onclick = () => {
+        const count = parseInt(document.getElementById("count").value, 10);
+        parent.postMessage(
+          { pluginMessage: { type: "create-rectangles", count } },
+          "*"
+        );
+      };
+
+      document.getElementById("cancel").onclick = () => {
+        // Optionally close the plugin or perform other actions
+        parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+      };
     </script>
   </body>
 </html>
